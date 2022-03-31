@@ -8,7 +8,10 @@ import os
 import io
 import pandas as pd
 import numpy as np
-
+import json as JSON
+import sys
+import fileinput
+import urllib.parse as urlparse
 
 print("""
 
@@ -30,7 +33,7 @@ collection_to_steal = "https://opensea.io/collection/" + input("Enter Collection
 collection_name = input("Enter new collection name: ")
 
 #Stolen nft stored under images folder
-target_path ='./images'
+target_path ='./collections'
 
 #Function to save NFT as files
 def write_text(data: bytes, path: str):
@@ -38,200 +41,174 @@ def write_text(data: bytes, path: str):
         file.write(data)
 
 #Function to get the api url that displays the json data
-def get_api_url(contract_add, token_id):
-	links = []
+def get_json_url(contract_add, token_id,collection_to_steal):
+    links = []
 
-	#Construct the asset url of the indivual nft
-	asset_url = "https://opensea.io/assets/" + contract_add + "/" + token_id
-	#print("asset url:" + asset_url)
+    #Construct the asset url of the indivual nft
+    asset_url = "https://opensea.io/assets/" + contract_add + "/" + token_id
 
-	#Scrape the asset url to get the api url
-	req = Request(asset_url, headers={'User-Agent': 'Mozilla/5.0'})
-	html_page = urlopen(req)
-	soup = BeautifulSoup(html_page, "lxml")
+    #Scrape the asset url to get the api url
+    req = Request(asset_url, headers={'User-Agent': 'Mozilla/5.0'})
+    html_page = urlopen(req)
+    soup = BeautifulSoup(html_page, "lxml")
 
-	#Scraping all the urls in the page
-	for link in soup.findAll('a'):
-	    links.append(link.get('href'))
+    #Scraping all the urls in the page
+    for link in soup.findAll('a'):
+        links.append(link.get('href'))
 
+    #Getting the unique key of the collection
+    for link in links:
+        if link != None and str(token_id) in link:
+            #print(link)
 
-	#Looking for this substring
-	substring = "https://opensea.mypinata.cloud/ipfs/"
-
-	#Getting the unique key of the collection
-	for link in links:
-		if link != None and substring in link:
-			api_url = re.search("https://opensea.mypinata.cloud/ipfs/(.*)/", link)
-			print(api_url)	
-			print(link)
-
-			return(api_url.group(0))
-
+            return link
 
 
 def steal_collection(collection_url: str):
+    links = []
+    json_list = []
+    scrapped_json = []
+    image_list = []
+    #Scraping the web for assets url
+    req = Request(collection_url, headers={'User-Agent': 'Mozilla/5.0'})
+    html_page = urlopen(req)
+    soup = BeautifulSoup(html_page, "lxml")
+
+    for link in soup.findAll('a'):
+        links.append(link.get('href'))
+
+    for link in links:
+        if link!= None:
+            if link.startswith("/assets"):
+                contract_address = re.search('/assets/(.*)/', link)
+                token_id = link.rsplit('/', 1)[-1]
+
+    acquired_json_url = get_json_url(str(contract_address.group(1)), str(token_id),collection_url)
+
+    #Check for file extension
+    ext = os.path.splitext(urlparse.urlparse(acquired_json_url).path)[1]
 
 
-	#Declaring the arrays
-	links = []
-	stolen_tokens = []
-	api_list = []
-	json_list = []
-	image_list = []
-	name_list = []
-	description_list = []
-	external_url_list = []
-	attributes_list = []
-	token_list = []
-
-	#Scraping the web for assets url
-	req = Request(collection_url, headers={'User-Agent': 'Mozilla/5.0'})
-	html_page = urlopen(req)
-	soup = BeautifulSoup(html_page, "lxml")
-
-	for link in soup.findAll('a'):
-	    links.append(link.get('href'))
+    json_url = os.path.dirname(acquired_json_url)
 
 
-	for link in links:
-		if link!= None:
-			if link.startswith("/assets"):
-				contract_address = re.search('/assets/(.*)/', link)
-				token_id = link[-4:]
-				if "/" not in token_id:
-					if token_id.isalpha()== False:
-						if not token_id.startswith("0"):
-							stolen_tokens.append(token_id)
-					else:
-						print(token_id)
+    #Specify the range of NFTs
+    i = int(token_id)
+    while i < int(token_id)+10:
+        if ext != None:
+            unique_json_url = json_url + '/' + str(i) + ext
+        else:
+            unique_json_url = json_url + '/' + str(i)
+        json_list.append(unique_json_url)
+        i+=1
 
-	#Using the scrapped token id to get the api url
-	stolen_tokens = list(dict.fromkeys(stolen_tokens))
+    #get all json data
+    for json in json_list:
+        r = requests.get(json)
+        scrapped_json.append(r)
 
+    j=0
+    for json_element in scrapped_json:
+        
+        #Convert response to json
+        json_object = json_element.json()
+        found_image = json_object["image"]
 
-	#before appending token id at the back
-	#token standard: ERC-721
-	#Have to find the api url automatically
-	#get the api url using contract address and token id
+        #IF incomplete image url
+        if found_image.startswith("ipfs://"):
+            image_list.append(found_image)
+            found_image = found_image.replace("ipfs://", "https://ipfs.io/ipfs/")
+        else:
+            image_list.append(found_image)
 
-	contract_address = contract_address.group(1)
-	
-	for token in stolen_tokens:
-
-		#Invoke the get_api_url function
-		#not all assets pages contain the link so must loop through
-		api_url = get_api_url(contract_address, token)
-
-		if api_url!= None:
-			break
-		else:
-			continue
-
-	#Specify the range of NFTs
-	i = 0
-	while i < 100:
-		unique_api_url = api_url + str(i)
-		api_list.append(unique_api_url)
-		i+=1
-		print(unique_api_url)
-
-	#get all json data
-	for api in api_list:
-		r = requests.get(api)
-		json_list.append(r)
+        
 
 
-	for json in json_list:
-		#Convert json data to string
-		json = str(json.json())
+        #Conovert json to string
+        json = str(json_element.json())
 
 
-		#Extract data from the json
-		try:
-			found_token = re.search("'id': (.+?), ", json).group(1)
-			found_image = re.search("'image': '(.+?)', ", json).group(1)
-			found_name = json.split("'name': \'")[1].split(". \",")[0]
-			found_name = re.search("'name': '(.+?)', ", json).group(1)
-			found_description = json.split("'description': ")[1].split(", 'e")[0]
-			found_external_url = re.search("'external_url': '(.+?)',", json).group(1)
-			found_attributes = json.split("'attributes': ")[1].split("}]}")[0]
+        #Create collections folder if doesnt exist
+        target_path = './collections'
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
 
-		except AttributeError:
-			pass
+        #Create unique collection folder to store image and json folder
+        # ./collections/collection_name
+        target_folder = os.path.join(target_path,'_'.join(collection_name.lower().split(' ')))
+        if not os.path.exists(target_folder):
+            os.makedirs(target_folder)
 
-		#Append extracted json data to array
-		token_list.append(found_token)
-		image_list.append(found_image)
-		name_list.append(found_name)
-		description_list.append(found_description)
-		external_url_list.append(found_external_url)
-		attributes_list.append(found_attributes)
+        #Create image folder in collections/collection_name/
+        # ./collections/collection_name/images
+        image_path = os.path.join(target_folder,"images")
+        
+        if not os.path.exists(image_path):
+            os.makedirs(image_path)
 
 
-	# For Testing purposes
-	# print("IMAGE LIST")
-	# print(len(image_list))
-	# print(image_list)
-
-	# print("\nNAME LIST")
-	# print(len(name_list))
-	# print(name_list)
-
-	# print("\nDESCRIPTION LIST")
-	# print(len(description_list))
-	# print(description_list)
-
-	# print("\nURL LIST")
-	# print(len(external_url_list))
-	# print(external_url_list)
-
-	#Create folder to store NFTs
-	target_folder = os.path.join(target_path,'_'.join(collection_name.lower().split(' ')))
-	if not os.path.exists(target_folder):
-		os.makedirs(target_folder)
-
-	#call the download function
-	download_count=0
-	for url in image_list:
-	    svg = requests.get(url).content
-	    filename = './images/'+ collection_name + '/' +url[-68:]
-	    write_text(svg, filename)
-	    download_count+=1
-	    print(download_count)
-	    print(filename)
+        #Download images from image link and store in /collections/collection_name/image
+        svg = requests.get(found_image).content
+        filename = image_path + "/" +found_image.rsplit('/', 1)[-1]
+        write_text(svg, filename)
 
 
-	#For Testing purposes:
-	# print(len(token_list))
-	# print(len(image_list))
-	# print(len(name_list))
-	# print(len(description_list))
-	# print(len(external_url_list))
-	# print(len(attributes_list))
+        #Path to store json files
+        json_path = os.path.join(target_folder,"json")
+        if not os.path.exists(json_path):
+            os.makedirs(json_path)
 
-	#Write to csv file
-	token_id_col = np.array(token_list)
-	image_col = np.array(image_list)
-	name_col = np.array(name_list)
-	desc_col = np.array(description_list)
-	url_col = np.array(external_url_list)
-	attributes_col = np.array(attributes_list)
+        json_file_path = json_path + "/" + str(j)
 
-	#Generate CSV
-	df = pd.DataFrame({"Token ID" : token_id_col, "Image File" : image_col, "Name" : name_col, "Description" : desc_col, "External URL" : url_col, "Attributes" : attributes_col})
-	df.to_csv("stolenNFT.csv", index=False)
+        #Write json into files to be uploaded onto ipfs
+        with open(json_file_path, 'w') as f:
+            f.write(json)
+        j+=1
 
-
-steal_collection(collection_to_steal)
+    return(image_list)
 
 
 
+def replace_imagelink_json(collection_name, CID_image,image_list):
+    #https://gateway.pinata.cloud/ipfs/QmSps8bjjbyKnCx4CWXzoBz4Sb4fT6ba1i4e5rqYByEwtf/images
+
+    #Get number of files in json directory
+    dir_path = './collections/'+collection_name+'/json'
+
+    #Count number of files in json directory
+    path, dirs, files = next(os.walk(dir_path))
+    file_count = len(files)
 
 
+    i=0
+    while i<file_count:
+        new_string = "https://gateway.pinata.cloud/ipfs/" + CID_image + "/" + image_list[i].rsplit('/', 1)[-1]
+
+        json_file = dir_path+"/"+str(i)
 
 
+        x = image_list[i]
+        y = new_string
+             
+        with open(json_file, 'r+') as file:
+            for l in fileinput.input(files = json_file):
+                l = l.replace(x, y)
+                #sys.stdout.write(l)
+                
+                file.write(l)
 
+        i+=1
 
+    
 
+#Driver code
 
+result = steal_collection(collection_to_steal)
 
+print("We've gotten the goods! Upload them to IPFS!")
+
+CID_images = input("Enter the CID for images: ")
+
+replace_imagelink_json(collection_name, CID_images,result)
+
+print("The json files are ready at /collections/"+collection_name+"/json")
