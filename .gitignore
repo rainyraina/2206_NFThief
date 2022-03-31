@@ -1,0 +1,4 @@
+uploadContract/node_modules
+uploadContract/.env
+uploadContract/cache
+uploadContract/artifacts
