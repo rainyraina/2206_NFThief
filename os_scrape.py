@@ -12,6 +12,7 @@ import json as JSON
 import sys
 import fileinput
 import urllib.parse as urlparse
+import shutil
 
 print("""
 
@@ -69,6 +70,8 @@ def steal_collection(collection_url: str):
     json_list = []
     scrapped_json = []
     image_list = []
+    name_list = []
+    attribute_list = []
     #Scraping the web for assets url
     req = Request(collection_url, headers={'User-Agent': 'Mozilla/5.0'})
     html_page = urlopen(req)
@@ -94,7 +97,7 @@ def steal_collection(collection_url: str):
 
     #Specify the range of NFTs
     i = int(token_id)
-    while i < int(token_id)+10:
+    while i < int(token_id)+5:
         if ext != None:
             unique_json_url = json_url + '/' + str(i) + ext
         else:
@@ -113,6 +116,11 @@ def steal_collection(collection_url: str):
         #Convert response to json
         json_object = json_element.json()
         found_image = json_object["image"]
+        found_name= json_object["name"]
+        found_attribute= json_object["attributes"]
+
+        name_list.append(found_name)
+        attribute_list.append(found_attribute)
 
         #IF incomplete image url
         if found_image.startswith("ipfs://"):
@@ -120,6 +128,7 @@ def steal_collection(collection_url: str):
             found_image = found_image.replace("ipfs://", "https://ipfs.io/ipfs/")
         else:
             image_list.append(found_image)
+
 
         
 
@@ -165,11 +174,11 @@ def steal_collection(collection_url: str):
             f.write(json)
         j+=1
 
-    return(image_list)
+    return(image_list,name_list,attribute_list)
 
 
 
-def replace_imagelink_json(collection_name, CID_image,image_list):
+def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attribute_list):
     #https://gateway.pinata.cloud/ipfs/QmSps8bjjbyKnCx4CWXzoBz4Sb4fT6ba1i4e5rqYByEwtf/images
 
     #Get number of files in json directory
@@ -186,13 +195,32 @@ def replace_imagelink_json(collection_name, CID_image,image_list):
 
         json_file = dir_path+"/"+str(i)
 
+        original = "./json_template"
 
-        x = image_list[i]
-        y = new_string
+        target = json_file
+
+        shutil.copyfile(original, target)
+
+
+        x = "Blythe"
+        y = name_list[i]
+
+
+        a = "insert_here"
+        b = new_string
+
+        c = "[]"
+        d = str(attribute_list[i])
+
+        e = "'"
+        f = '"'
              
         with open(json_file, 'r+') as file:
             for l in fileinput.input(files = json_file):
                 l = l.replace(x, y)
+                l = l.replace(a, b)
+                l = l.replace(c, d)
+                l = l.replace(e, f)
                 #sys.stdout.write(l)
                 
                 file.write(l)
@@ -209,6 +237,6 @@ print("We've gotten the goods! Upload them to IPFS!")
 
 CID_images = input("Enter the CID for images: ")
 
-replace_imagelink_json(collection_name, CID_images,result)
+replace_imagelink_json(collection_name, CID_images,result[0],result[1], result[2])
 
 print("The json files are ready at /collections/"+collection_name+"/json")
