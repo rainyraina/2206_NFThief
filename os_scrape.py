@@ -1,42 +1,18 @@
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
-from PIL import Image
 import requests
+import io
 from io import BytesIO
 import re
 import os
-import io
-import pandas as pd
-import numpy as np
-import json as JSON
 import sys
 import fileinput
 import urllib.parse as urlparse
 import shutil
 
-print("""
 
- .-----------------. .----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .----------------. 
-| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
-| | ____  _____  | || |  _________   | || |  _________   | || |  ____  ____  | || |     _____    | || |  _________   | || |  _________   | |
-| ||_   \|_   _| | || | |_   ___  |  | || | |  _   _  |  | || | |_   ||   _| | || |    |_   _|   | || | |_   ___  |  | || | |_   ___  |  | |
-| |  |   \ | |   | || |   | |_  \_|  | || | |_/ | | \_|  | || |   | |__| |   | || |      | |     | || |   | |_  \_|  | || |   | |_  \_|  | |
-| |  | |\ \| |   | || |   |  _|      | || |     | |      | || |   |  __  |   | || |      | |     | || |   |  _|  _   | || |   |  _|      | |
-| | _| |_\   |_  | || |  _| |_       | || |    _| |_     | || |  _| |  | |_  | || |     _| |_    | || |  _| |___/ |  | || |  _| |_       | |
-| ||_____|\____| | || | |_____|      | || |   |_____|    | || | |____||____| | || |    |_____|   | || | |_________|  | || | |_____|      | |
-| |              | || |              | || |              | || |              | || |              | || |              | || |              | |
-| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
- '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------' 
-""")
 
-#Get the collection name to steal from
-collection_to_steal = "https://opensea.io/collection/" + input("Enter Collection name in lower case: ")
-collection_name = input("Enter new collection name: ")
-
-#Stolen nft stored under images folder
-target_path ='./collections'
-
-#Function to save NFT as files
+#Function to save NFT as image files
 def write_text(data: bytes, path: str):
     with open(path, 'wb') as file:
         file.write(data)
@@ -60,8 +36,6 @@ def get_json_url(contract_add, token_id,collection_to_steal):
     #Getting the unique key of the collection
     for link in links:
         if link != None and str(token_id) in link:
-            #print(link)
-
             return link
 
 
@@ -72,31 +46,38 @@ def steal_collection(collection_url: str):
     image_list = []
     name_list = []
     attribute_list = []
-    #Scraping the web for assets url
+
+    #Scraping the collection_url for assets url
     req = Request(collection_url, headers={'User-Agent': 'Mozilla/5.0'})
     html_page = urlopen(req)
     soup = BeautifulSoup(html_page, "lxml")
 
+    #Append all links to link array
     for link in soup.findAll('a'):
         links.append(link.get('href'))
 
     for link in links:
         if link!= None:
-            if link.startswith("/assets"):
+            #Search for links with contract address and link address
+            if link.startswith("/assets/0x"):
                 contract_address = re.search('/assets/(.*)/', link)
                 token_id = link.rsplit('/', 1)[-1]
 
+    #Each NFT has its unique json data.
+    #Call get_json_url to aquire all unique json data
     acquired_json_url = get_json_url(str(contract_address.group(1)), str(token_id),collection_url)
 
     #Check for file extension
     ext = os.path.splitext(urlparse.urlparse(acquired_json_url).path)[1]
 
 
+    #Get the ipfs directory name
     json_url = os.path.dirname(acquired_json_url)
-
 
     #Specify the range of NFTs
     i = int(token_id)
+
+    #Get 5 NFTs
     while i < int(token_id)+5:
         if ext != None:
             unique_json_url = json_url + '/' + str(i) + ext
@@ -116,9 +97,12 @@ def steal_collection(collection_url: str):
         #Convert response to json
         json_object = json_element.json()
         found_image = json_object["image"]
-        found_name= json_object["name"]
         found_attribute= json_object["attributes"]
+        found_name= json_object["name"]
+    
 
+
+        #These data will be used for new json files
         name_list.append(found_name)
         attribute_list.append(found_attribute)
 
@@ -130,10 +114,7 @@ def steal_collection(collection_url: str):
             image_list.append(found_image)
 
 
-        
-
-
-        #Conovert json to string
+        #Convert json to string
         json = str(json_element.json())
 
 
@@ -179,7 +160,6 @@ def steal_collection(collection_url: str):
 
 
 def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attribute_list):
-    #https://gateway.pinata.cloud/ipfs/QmSps8bjjbyKnCx4CWXzoBz4Sb4fT6ba1i4e5rqYByEwtf/images
 
     #Get number of files in json directory
     dir_path = './collections/'+collection_name+'/json'
@@ -191,17 +171,18 @@ def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attr
 
     i=0
     while i<file_count:
+        #API link to our own ipfs pinata cloud where images are stored
         new_string = "https://gateway.pinata.cloud/ipfs/" + CID_image + "/" + image_list[i].rsplit('/', 1)[-1]
 
+        #json file name -> 0,1,2,3,4...
         json_file = dir_path+"/"+str(i)
 
+        #Copied from json template and replading the placeholder values
         original = "./json_template"
-
         target = json_file
-
         shutil.copyfile(original, target)
 
-
+        #Replacing placeholder valies
         x = "Blythe"
         y = name_list[i]
 
@@ -215,13 +196,13 @@ def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attr
         e = "'"
         f = '"'
              
+        #modifying the json file with replacements
         with open(json_file, 'r+') as file:
             for l in fileinput.input(files = json_file):
                 l = l.replace(x, y)
                 l = l.replace(a, b)
                 l = l.replace(c, d)
                 l = l.replace(e, f)
-                #sys.stdout.write(l)
                 
                 file.write(l)
 
@@ -230,6 +211,27 @@ def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attr
     
 
 #Driver code
+print("""
+
+ .-----------------. .----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .----------------. 
+| .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
+| | ____  _____  | || |  _________   | || |  _________   | || |  ____  ____  | || |     _____    | || |  _________   | || |  _________   | |
+| ||_   \|_   _| | || | |_   ___  |  | || | |  _   _  |  | || | |_   ||   _| | || |    |_   _|   | || | |_   ___  |  | || | |_   ___  |  | |
+| |  |   \ | |   | || |   | |_  \_|  | || | |_/ | | \_|  | || |   | |__| |   | || |      | |     | || |   | |_  \_|  | || |   | |_  \_|  | |
+| |  | |\ \| |   | || |   |  _|      | || |     | |      | || |   |  __  |   | || |      | |     | || |   |  _|  _   | || |   |  _|      | |
+| | _| |_\   |_  | || |  _| |_       | || |    _| |_     | || |  _| |  | |_  | || |     _| |_    | || |  _| |___/ |  | || |  _| |_       | |
+| ||_____|\____| | || | |_____|      | || |   |_____|    | || | |____||____| | || |    |_____|   | || | |_________|  | || | |_____|      | |
+| |              | || |              | || |              | || |              | || |              | || |              | || |              | |
+| '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
+ '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------' 
+""")
+
+#Get the collection name to steal from
+collection_to_steal = "https://opensea.io/collection/" + input("Enter Collection name in lower case: ")
+collection_name = input("Enter new collection name: ")
+
+#Stolen nft stored under images folder
+target_path ='./collections'
 
 result = steal_collection(collection_to_steal)
 
@@ -240,3 +242,7 @@ CID_images = input("Enter the CID for images: ")
 replace_imagelink_json(collection_name, CID_images,result[0],result[1], result[2])
 
 print("The json files are ready at /collections/"+collection_name+"/json")
+
+
+
+
