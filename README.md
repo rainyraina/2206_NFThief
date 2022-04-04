@@ -1,8 +1,13 @@
 # 2206_NFThief
 
+Refer to step-by-step tutorial to setup and run the program
+
 ## To run the code:
-python3 os_scrape.py
+python3 main.py
 
 ## Input collection name
-For now only can put cyberbrokers
-Input any folder name you want
+cyberbrokers
+lilpudgys
+friendsies
+wonderpals
+

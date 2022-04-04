@@ -1,4 +1,4 @@
-uploadContract/node_modules
-uploadContract/.env
-uploadContract/cache
-uploadContract/artifacts
+uploadNFT/node_modules
+uploadNFT/.env
+uploadNFT/cache
+uploadNFT/artifacts

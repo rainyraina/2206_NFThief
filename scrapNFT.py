@@ -10,7 +10,8 @@ import fileinput
 import urllib.parse as urlparse
 import shutil
 
-
+#Stolen nft stored under images folder
+target_path ='./collections'
 
 #Function to save NFT as image files
 def write_text(data: bytes, path: str):
@@ -39,7 +40,7 @@ def get_json_url(contract_add, token_id,collection_to_steal):
             return link
 
 
-def steal_collection(collection_url: str):
+def steal_collection(collection_url: str,collection_name):
     links = []
     json_list = []
     scrapped_json = []
@@ -209,9 +210,9 @@ def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attr
         i+=1
 
     
-
+"""
 #Driver code
-print("""
+print("
 
  .-----------------. .----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .----------------. 
 | .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
@@ -224,7 +225,7 @@ print("""
 | |              | || |              | || |              | || |              | || |              | || |              | || |              | |
 | '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------' 
-""")
+")
 
 #Get the collection name to steal from
 collection_to_steal = "https://opensea.io/collection/" + input("Enter Collection name in lower case: ")
@@ -243,6 +244,6 @@ replace_imagelink_json(collection_name, CID_images,result[0],result[1], result[2
 
 print("The json files are ready at /collections/"+collection_name+"/json")
 
-
+"""
 
 
