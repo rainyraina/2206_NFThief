@@ -192,7 +192,7 @@ def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attr
         b = new_string
 
         c = "[]"
-        d = str(attribute_list[i])
+        d = "\"default\""
 
         e = "'"
         f = '"'
