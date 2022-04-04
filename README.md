@@ -4,5 +4,5 @@
 python3 os_scrape.py
 
 ## Input collection name
-For now only can put cyberbrokers
-Input any folder name you want
+Examples: cyberbrokers, lilpudgys friendsies, etc.
+
