@@ -42,20 +42,17 @@ def main():
         if selection =='1': 
             print("\n1.1 Download NFT image and metadata into local storage")
             print("\nPlease enter the following details")
-            
-
-            scraping_environment = getIntegerInput("1. Please select the environment [1:testnets 2: mainnet]: ")
-            
+            scraping_environment = getIntegerInput("1. Environment of the collection that you wish to steal [1:testnets 2:mainnet]: ")
             if scraping_environment == "1":
                 collection_to_steal_url = "https://testnets.opensea.io/collection/" + getStringInput("2. Collection name that you wish to steal (in lowercase): ")
             elif scraping_environment =="2":
                 collection_to_steal_url = "https://opensea.io/collection/" + getStringInput("2. Collection name that you wish to steal (in lowercase): ")
 
-            print("Please input the scraping range below (By token ID)")
+            print("3. Scraping range of the token ID")
             scraping_range_start = getIntegerInput("Start: ")
             scraping_range_end = getIntegerInput("End: ")
             
-            collection_name = getStringInput("3. New collection name: ")
+            collection_name = getStringInput("4. New collection name: ")
             result = scrapNFT.steal_collection(collection_to_steal_url,collection_name,scraping_range_start,scraping_range_end)
             print("The NFT image and metadata are downloaded into ./collections/"+collection_name)
             
@@ -93,7 +90,7 @@ def main():
             uploadNFT.verifyContract(contractAddress,verifyIPFS)
         
         # Exit
-        elif selection == '5':
+        elif selection == '4':
             print("\nEnd of program. Thanks for using it!")
             exit(0)
         else: 
