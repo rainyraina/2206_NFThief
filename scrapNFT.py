@@ -22,18 +22,12 @@ def write_text(data: bytes, path: str):
 def get_json_url(contract_add, token_id,collection_to_steal):
     links = []
 
-    print(collection_to_steal)
-
-
     if "testnets" in collection_to_steal:
         #Construct the asset url of the indivual nft
         asset_url = "https://testnets.opensea.io/assets/" + contract_add + "/" + token_id
     else:
         #Construct the asset url of the indivual nft
         asset_url = "https://opensea.io/assets/" + contract_add + "/" + token_id
-
-    print(asset_url)
-
 
     #Scrape the asset url to get the api url
     req = Request(asset_url, headers={'User-Agent': 'Mozilla/5.0'})
