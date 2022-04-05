@@ -51,8 +51,12 @@ def main():
             elif scraping_environment =="2":
                 collection_to_steal_url = "https://opensea.io/collection/" + getStringInput("2. Collection name that you wish to steal (in lowercase): ")
 
+            print("Please input the scraping range below (By token ID)")
+            scraping_range_start = getIntegerInput("Start: ")
+            scraping_range_end = getIntegerInput("End: ")
+            
             collection_name = getStringInput("3. New collection name: ")
-            result = scrapNFT.steal_collection(collection_to_steal_url,collection_name)
+            result = scrapNFT.steal_collection(collection_to_steal_url,collection_name,scraping_range_start,scraping_range_end)
             print("The NFT image and metadata are downloaded into ./collections/"+collection_name)
             
             print("\n1.2 Upload NFT image to IPFS")
