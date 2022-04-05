@@ -42,7 +42,7 @@ def get_json_url(contract_add, token_id,collection_to_steal):
 
     #Getting the unique key of the collection
     for link in links:
-        if link != None and str(token_id) and "ipfs" in link:
+        if link != None and "/"+str(token_id) in link:
             return link
 
 
