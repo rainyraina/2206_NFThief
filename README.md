@@ -1,7 +1,7 @@
 # NFThief
 
 ## What is NFThief?
-NFTthief is an offensive tool that allows user to automate the process of 'stealing' the NFT collections from OpenSea mainnet or testnet as well as uploading and minting the 'stolen' NFT collections with the help of ERC-721 smart contract. It is created to prove that multiple NFT marketplaces including OpenSea, Rarible, NFTrade, and LooksRare, failed to identify fradulent NFTs. 
+NFTthief is an offensive tool that allows users to automate the process of 'stealing' the IPFS-based NFT collections from OpenSea mainnet or testnet as well as uploading and minting the 'stolen' NFT collections with the help of ERC-721 smart contract. It is created to prove that multiple NFT marketplaces including OpenSea, Rarible, NFTrade, and LooksRare, failed to identify fradulent NFTs. 
 
 ## How to setup and run?
 Refer to [step-by-step tutorial](https://github.com/rainyraina/2206_NFThief/wiki/Step-by-step-tutorial) on how to setup and run the program.
