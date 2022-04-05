@@ -1,10 +1,9 @@
-
 from colorama import Fore, Back, Style
 import uploadNFT
 import scrapNFT
 
 menu = {}
-menu['1']="Scrap NFT" 
+menu['1']="Scrape NFT" 
 menu['2']="Upload NFT with smart contract"
 menu['3']="Verify smart contract"
 menu['4']="Exit"
@@ -43,8 +42,16 @@ def main():
         if selection =='1': 
             print("\n1.1 Download NFT image and metadata into local storage")
             print("\nPlease enter the following details")
-            collection_to_steal_url = "https://opensea.io/collection/" + getStringInput("1. Collection name that you wish to steal (in lowercase): ")
-            collection_name = getStringInput("2. New collection name: ")
+            
+
+            scraping_environment = getIntegerInput("1. Please select the environment [1:testnets 2: mainnet]: ")
+            
+            if scraping_environment == "1":
+                collection_to_steal_url = "https://testnets.opensea.io/collection/" + getStringInput("2. Collection name that you wish to steal (in lowercase): ")
+            elif scraping_environment =="2":
+                collection_to_steal_url = "https://opensea.io/collection/" + getStringInput("2. Collection name that you wish to steal (in lowercase): ")
+
+            collection_name = getStringInput("3. New collection name: ")
             result = scrapNFT.steal_collection(collection_to_steal_url,collection_name)
             print("The NFT image and metadata are downloaded into ./collections/"+collection_name)
             
