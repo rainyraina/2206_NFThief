@@ -22,8 +22,14 @@ def write_text(data: bytes, path: str):
 def get_json_url(contract_add, token_id,collection_to_steal):
     links = []
 
-    #Construct the asset url of the indivual nft
-    asset_url = "https://opensea.io/assets/" + contract_add + "/" + token_id
+
+    if "testnets" in collection_to_steal:
+        #Construct the asset url of the indivual nft
+        asset_url = "https://testnets.opensea.io/assets/" + contract_add + "/" + token_id
+    else:
+        #Construct the asset url of the indivual nft
+        asset_url = "https://opensea.io/assets/" + contract_add + "/" + token_id
+
 
     #Scrape the asset url to get the api url
     req = Request(asset_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -213,7 +219,6 @@ def replace_imagelink_json(collection_name, CID_image,image_list,name_list, attr
 """
 #Driver code
 print("
-
  .-----------------. .----------------.  .----------------.  .----------------.  .----------------.  .----------------.  .----------------. 
 | .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. || .--------------. |
 | | ____  _____  | || |  _________   | || |  _________   | || |  ____  ____  | || |     _____    | || |  _________   | || |  _________   | |
@@ -226,24 +231,14 @@ print("
 | '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' || '--------------' |
  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------'  '----------------' 
 ")
-
 #Get the collection name to steal from
 collection_to_steal = "https://opensea.io/collection/" + input("Enter Collection name in lower case: ")
 collection_name = input("Enter new collection name: ")
-
 #Stolen nft stored under images folder
 target_path ='./collections'
-
 result = steal_collection(collection_to_steal)
-
 print("We've gotten the goods! Upload them to IPFS!")
-
 CID_images = input("Enter the CID for images: ")
-
 replace_imagelink_json(collection_name, CID_images,result[0],result[1], result[2])
-
 print("The json files are ready at /collections/"+collection_name+"/json")
-
 """
-
-
